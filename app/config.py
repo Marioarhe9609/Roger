@@ -22,7 +22,7 @@ COLLECTION_METADATA = "metadata"
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", f"{GCP_PROJECT_ID}-roger-assets")
 
 # Vertex AI
-VERTEX_MODEL = os.environ.get("VERTEX_MODEL", "gemini-2.0-flash-001")
+VERTEX_MODEL = os.environ.get("VERTEX_MODEL", "gemini-2.5-flash")
 VERTEX_LOCATION = os.environ.get("VERTEX_LOCATION", GCP_REGION)
 
 # App Settings

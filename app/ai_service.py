@@ -3,27 +3,27 @@ AI service for interacting with Vertex AI (Gemini).
 Handles RAG-based question answering with IDEAM enterprise architecture context.
 """
 import logging
-from google.cloud import aiplatform
-from vertexai.generative_models import GenerativeModel, Part
+from google import genai
+from google.genai.types import GenerateContentConfig
 from app.config import GCP_PROJECT_ID, VERTEX_LOCATION, VERTEX_MODEL
 from app.prompts.system_prompt import SYSTEM_PROMPT, CONTEXT_TEMPLATE
 from app.knowledge_service import build_context_for_query
 
 logger = logging.getLogger(__name__)
 
-_model = None
+_client = None
 
 
-def _get_model():
-    """Lazy initialization of the Gemini model."""
-    global _model
-    if _model is None:
-        aiplatform.init(project=GCP_PROJECT_ID, location=VERTEX_LOCATION)
-        _model = GenerativeModel(
-            VERTEX_MODEL,
-            system_instruction=SYSTEM_PROMPT,
+def _get_client():
+    """Lazy initialization of the GenAI client."""
+    global _client
+    if _client is None:
+        _client = genai.Client(
+            vertexai=True,
+            project=GCP_PROJECT_ID,
+            location=VERTEX_LOCATION,
         )
-    return _model
+    return _client
 
 
 def generate_response(user_message: str) -> str:
@@ -46,15 +46,17 @@ def generate_response(user_message: str) -> str:
         )
 
         # Step 3: Generate response with Gemini
-        model = _get_model()
-        response = model.generate_content(
-            full_prompt,
-            generation_config={
-                "max_output_tokens": 2048,
-                "temperature": 0.3,
-                "top_p": 0.8,
-                "top_k": 40,
-            },
+        client = _get_client()
+        response = client.models.generate_content(
+            model=VERTEX_MODEL,
+            contents=full_prompt,
+            config=GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=2048,
+                temperature=0.3,
+                top_p=0.8,
+                top_k=40,
+            ),
         )
 
         if response and response.text:
